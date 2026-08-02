@@ -1,16 +1,51 @@
-body { padding: 0; margin: 0 }
-#unity-container { position: absolute }
-#unity-container.unity-desktop { left: 50%; top: 50%; transform: translate(-50%, -50%) }
+/* PivotDuel — 캔버스를 브라우저 창에 꽉 채우는 템플릿.
+ *
+ * 기본 템플릿(Base/Default)은 캔버스를 960x600 고정으로 두고 페이지 가운데 놓는다.
+ * 그 크기에서는 HUD 글자가 판독 불가가 된다(1080p 기준 치수를 0.556배로 줄이는데
+ * 폰트만 9px에서 멈춰 글자가 상자를 넘는다). 그래서 창 크기를 그대로 쓴다.
+ *
+ * 렌더 픽셀이 늘어나는 것은 실측으로 감당된다 — D35: 전체화면 1920x1023 전투 중
+ * 평균 97.5fps, 33.3ms 초과 프레임 0.3%.
+ */
+html, body { padding: 0; margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000 }
+
+/* 데스크톱·모바일 구분 없이 창 전체를 쓴다. */
+#unity-container { position: fixed; left: 0; top: 0; width: 100%; height: 100%;
+                   display: flex; align-items: center; justify-content: center }
+#unity-container.unity-desktop { left: 0; top: 0; transform: none }
 #unity-container.unity-mobile { position: fixed; width: 100%; height: 100% }
-#unity-canvas { background: #231F20 }
-.unity-mobile #unity-canvas { width: 100%; height: 100% }
+
+/* 🔴 max-* 상한은 성능 가드다. 창을 채우되 렌더 해상도가 1920x1080을 넘지 않게 한다.
+ * 4K 모니터에서 최대화하면 3840x2000이 되어 픽셀이 4배가 되고, 그 구간은 D35의
+ * fps 실측(1920x1023 / 97.5fps)이 보증하지 않는다. 남는 자리는 검게 두고 가운데 놓는다.
+ * 상한을 넘는 화면에서도 HUD는 1080p 기준으로 그려지므로 판독에는 문제가 없다. */
+#unity-canvas { display: block; width: 100%; height: 100%;
+                max-width: 1920px; max-height: 1080px;
+                background: #231F20 }
+.unity-mobile #unity-canvas { width: 100%; height: 100%; max-width: none; max-height: none }
+
 #unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none }
 #unity-logo { width: 154px; height: 130px; background: url('unity-logo-dark.png') no-repeat center }
 #unity-progress-bar-empty { width: 141px; height: 18px; margin-top: 10px; margin-left: 6.5px; background: url('progress-bar-empty-dark.png') no-repeat center }
 #unity-progress-bar-full { width: 0%; height: 18px; margin-top: 10px; background: url('progress-bar-full-dark.png') no-repeat center }
-#unity-footer { position: relative }
+
+/* 푸터는 캔버스를 밀어내지 않도록 화면 위에 겹쳐 놓는다.
+ * 로딩이 끝나면 index.html이 hidden 클래스를 붙여 숨긴다 — 게임 화면을 가리면 안 된다. */
+#unity-footer { position: fixed; left: 0; bottom: 0; width: 100%; height: 38px; pointer-events: none }
+#unity-footer.hidden { display: none }
 .unity-mobile #unity-footer { display: none }
-#unity-logo-title-footer { float:left; width: 102px; height: 38px; background: url('unity-logo-title-footer.png') no-repeat center }
-#unity-build-title { float: right; margin-right: 10px; line-height: 38px; font-family: arial; font-size: 18px }
-#unity-fullscreen-button { cursor:pointer; float: right; width: 38px; height: 38px; background: url('fullscreen-button.png') no-repeat center }
-#unity-warning { position: absolute; left: 50%; top: 5%; transform: translate(-50%); background: white; padding: 10px; display: none }
+#unity-logo-title-footer { float: left; width: 102px; height: 38px; background: url('unity-logo-title-footer.png') no-repeat center }
+#unity-build-title { float: right; margin-right: 10px; line-height: 38px; font-family: arial; font-size: 18px; color: #ddd }
+
+/* 전체화면 버튼만 게임 중에도 남긴다(우측 상단 구석).
+ * HUD의 '적이 학습한 대응' 패널은 화면 여백 26px 뒤에서 시작하므로 구석은 비어 있다.
+ * 평소에는 흐리게 두고 마우스를 올렸을 때만 또렷해진다. 게임 중에는 포인터가 잠겨
+ * 커서가 여기 닿지 않으므로 방해가 되지 않는다. */
+#unity-fullscreen-button {
+  position: fixed; right: 6px; top: 6px; width: 28px; height: 28px;
+  background: url('fullscreen-button.png') no-repeat center / contain;
+  cursor: pointer; opacity: 0.25; transition: opacity 0.15s; pointer-events: auto; z-index: 10;
+}
+#unity-fullscreen-button:hover { opacity: 1 }
+
+#unity-warning { position: absolute; left: 50%; top: 5%; transform: translate(-50%); background: white; padding: 10px; display: none; z-index: 20 }

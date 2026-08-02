@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="ko">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | NAN2026</title>
+    <title>NAN2026</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
   </head>
@@ -17,9 +17,11 @@
         </div>
       </div>
       <div id="unity-warning"> </div>
+      <!-- 전체화면 버튼은 푸터 밖에 둔다 — 푸터는 로딩이 끝나면 숨기는데,
+           안에 있으면 버튼까지 같이 사라진다. -->
+      <div id="unity-fullscreen-button"></div>
       <div id="unity-footer">
         <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
         <div id="unity-build-title">NAN2026</div>
       </div>
     </div>
@@ -52,12 +54,12 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/WebGL_0729_baseline.loader.js";
+      var loaderUrl = buildUrl + "/WebGL_D90_ui.loader.js";
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/WebGL_0729_baseline.data.unityweb",
-        frameworkUrl: buildUrl + "/WebGL_0729_baseline.framework.js.unityweb",
-        codeUrl: buildUrl + "/WebGL_0729_baseline.wasm.unityweb",
+        dataUrl: buildUrl + "/WebGL_D90_ui.data.unityweb",
+        frameworkUrl: buildUrl + "/WebGL_D90_ui.framework.js.unityweb",
+        codeUrl: buildUrl + "/WebGL_D90_ui.wasm.unityweb",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "NAN2026",
@@ -77,6 +79,13 @@
       // happening inside the engine, and you would instead like to size up
       // the canvas DOM size and WebGL render target sizes yourself.
       // config.matchWebGLToCanvasSize = false;
+
+      // 🔴 렌더 배율을 1로 고정한다. 캔버스 DOM 크기가 그대로 렌더 해상도가 된다.
+      // 기본값은 window.devicePixelRatio라, 배율 150% 노트북에서는 CSS 1600px 창이
+      // 2400px로 렌더돼 픽셀이 2.25배가 된다. 그 구간은 fps를 재본 적이 없다
+      // (D35 실측은 1920x1023 / 평균 97.5fps). 검증된 범위 안에 머무는 쪽을 택했다.
+      // 대가: 고DPI 화면에서 화면이 약간 무르게 보인다 — 1인칭 액션이라 fps를 우선한다.
+      config.devicePixelRatio = 1;
 
       // If you would like all file writes inside Unity Application.persistentDataPath
       // directory to automatically persist so that the contents are remembered when
@@ -103,9 +112,10 @@
 
 
       } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
+        // 데스크톱에서도 캔버스를 창에 맞춘다.
+        // 원본 템플릿은 여기서 960x600px 고정을 걸었다 — 그것이
+        // 960x600 화면의 출처였고, 그 해상도에서는 HUD 글자가 판독 불가가 된다.
+        // 크기는 style.css가 정한다(창 100%, 상한 1920x1080).
       }
 
       document.querySelector("#unity-loading-bar").style.display = "block";
@@ -117,6 +127,8 @@
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
               }).then((unityInstance) => {
                 document.querySelector("#unity-loading-bar").style.display = "none";
+                // 로딩이 끝나면 푸터를 숨긴다 — 창을 꽉 채우므로 게임 화면 위에 겹친다.
+                document.querySelector("#unity-footer").classList.add("hidden");
                 document.querySelector("#unity-fullscreen-button").onclick = () => {
                   unityInstance.SetFullscreen(1);
                 };
